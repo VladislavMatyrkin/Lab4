@@ -74,6 +74,15 @@ menuBar.add(graphicsMenu);
         display.setShowAxis(showAxisMenuItem.isSelected());
     }
 };
+        // Создать действие для отображения графика "целая часть f(x)"
+        Action showIntegerPartAction = new AbstractAction("Показывать график \"целая часть f(x)\"") {
+            public void actionPerformed(ActionEvent event) {
+                display.setShowIntegerPart(((JCheckBoxMenuItem) event.getSource()).isSelected());
+            }
+        };
+        JCheckBoxMenuItem showIntegerPartMenuItem = new JCheckBoxMenuItem(showIntegerPartAction);
+        graphicsMenu.add(showIntegerPartMenuItem);
+        showIntegerPartMenuItem.setSelected(false);
 showAxisMenuItem = new JCheckBoxMenuItem(showAxisAction);
 // Добавить соответствующий элемент в меню
 graphicsMenu.add(showAxisMenuItem);
@@ -147,6 +156,7 @@ public static void main(String[] args) {
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setVisible(true);
 }
+
 // Класс-слушатель событий, связанных с отображением меню
 private class GraphicsMenuListener implements MenuListener {
     // Обработчик, вызываемый перед показом меню
@@ -155,6 +165,7 @@ private class GraphicsMenuListener implements MenuListener {
         showAxisMenuItem.setEnabled(fileLoaded);
         showMarkersMenuItem.setEnabled(fileLoaded);
     }
+
     // Обработчик, вызываемый после того, как меню исчезло с экрана
     public void menuDeselected(MenuEvent e) {
     }

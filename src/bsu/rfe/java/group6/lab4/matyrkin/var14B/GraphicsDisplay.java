@@ -1,5 +1,6 @@
 package bsu.rfe.java.group6.lab4.matyrkin.var14B;
 
+import java.awt.RenderingHints;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -151,63 +152,140 @@ minY
         canvas.setPaint(oldPaint);
         canvas.setColor(oldColor);
         canvas.setStroke(oldStroke);
+        // Отображаем график "целая часть f(x)", если это включено в настройках
+        if (showIntegerPart) paintIntegerPartGraphics(canvas);
     }
 
     // Отрисовка графика по прочитанным координатам
     protected void paintGraphics(Graphics2D canvas) {
-// Выбрать линию для рисования графика
+        canvas.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+        // Устанавливаем стиль линии графика: "-- - - - -- - --"
+        float[] dashPattern = {10, 5, 5, 5, 10, 5, 10};
+        BasicStroke graphicsStroke = new BasicStroke(2.5f, BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_ROUND, 10.0f, dashPattern, 0.0f);
         canvas.setStroke(graphicsStroke);
-// Выбрать цвет линии
-        canvas.setColor(Color.RED);
-/* Будем рисовать линию графика как путь, состоящий из множества
-сегментов (GeneralPath)
-* Начало пути устанавливается в первую точку графика, после чего
-прямой соединяется со
-* следующими точками
-*/
-        GeneralPath graphics = new GeneralPath();
+        canvas.setColor(Color.BLUE); // Цвет основной линии графика
+
+        // Построение графика
+        GeneralPath graphicsPath = new GeneralPath();
         for (int i = 0; i < graphicsData.length; i++) {
-// Преобразовать значения (x,y) в точку на экране point
-            Point2D.Double point = xyToPoint(graphicsData[i][0],
-                    graphicsData[i][1]);
+            Point2D.Double point = xyToPoint(graphicsData[i][0], graphicsData[i][1]);
             if (i > 0) {
-// Не первая итерация цикла - вести линию в точку point
-                graphics.lineTo(point.getX(), point.getY());
+                graphicsPath.lineTo(point.getX(), point.getY());
             } else {
-// Первая итерация цикла - установить начало пути в точку point
-                graphics.moveTo(point.getX(), point.getY());
+                graphicsPath.moveTo(point.getX(), point.getY());
             }
         }
-// Отобразить график
-        canvas.draw(graphics);
+
+        canvas.draw(graphicsPath);
     }
 
     // Отображение маркеров точек, по которым рисовался график
     protected void paintMarkers(Graphics2D canvas) {
-// Шаг 1 - Установить специальное перо для черчения контуров маркеров
         canvas.setStroke(markerStroke);
-// Выбрать красный цвета для контуров маркеров
-        canvas.setColor(Color.RED);
-// Выбрать красный цвет для закрашивания маркеров внутри
-        canvas.setPaint(Color.RED);
-// Шаг 2 - Организовать цикл по всем точкам графика
+
         for (Double[] point : graphicsData) {
-// Инициализировать эллипс как объект для представления маркера
-            Ellipse2D.Double marker = new Ellipse2D.Double();
-/* Эллипс будет задаваться посредством указания координат
-его центра
-и угла прямоугольника, в который он вписан */
-// Центр - в точке (x,y)
             Point2D.Double center = xyToPoint(point[0], point[1]);
-// Угол прямоугольника - отстоит на расстоянии (3,3)
-            Point2D.Double corner = shiftPoint(center, 3, 3);
-// Задать эллипс по центру и диагонали
-            marker.setFrameFromCenter(center, corner);
-            canvas.draw(marker); // Начертить контур маркера
-            canvas.fill(marker); // Залить внутреннюю область маркера
+
+            // Проверка условия для выделения маркера другим цветом
+            int integerPart = (int) Math.floor(point[1]);
+            int digitSum = sumOfDigits(integerPart);
+
+            if (digitSum < 10) {
+                canvas.setColor(Color.GREEN); // Цвет маркера при выполнении условия
+            } else {
+                canvas.setColor(Color.RED); // Обычный цвет маркера
+            }
+
+
+            int x = (int) center.getX(); // Центр маркера по X
+            int y = (int) center.getY(); // Центр маркера по Y
+
+            // Рисуем пиксели, соответствующие фигуре маркера
+
+            // 6-я строка, 1 и 11 столбцы
+            canvas.fillRect(x - 5, y, 1, 1);
+            canvas.fillRect(x + 5, y, 1, 1);
+
+            // 5-я и 7-я строки, 2-3 и 9-10 столбцы
+            canvas.fillRect(x - 4, y - 1, 1, 1);
+            canvas.fillRect(x - 3, y - 1, 1, 1);
+            canvas.fillRect(x + 3, y - 1, 1, 1);
+            canvas.fillRect(x + 4, y - 1, 1, 1);
+
+            canvas.fillRect(x - 4, y + 1, 1, 1);
+            canvas.fillRect(x - 3, y + 1, 1, 1);
+            canvas.fillRect(x + 3, y + 1, 1, 1);
+            canvas.fillRect(x + 4, y + 1, 1, 1);
+
+            // 4-я и 8-я строки, 4-5 и 7-8 столбцы
+            canvas.fillRect(x - 2, y - 2, 1, 1);
+            canvas.fillRect(x - 1, y - 2, 1, 1);
+            canvas.fillRect(x + 1, y - 2, 1, 1);
+            canvas.fillRect(x + 2, y - 2, 1, 1);
+
+            canvas.fillRect(x - 2, y + 2, 1, 1);
+            canvas.fillRect(x - 1, y + 2, 1, 1);
+            canvas.fillRect(x + 1, y + 2, 1, 1);
+            canvas.fillRect(x + 2, y + 2, 1, 1);
+
+            // 2-я и 10-я строки, 5 и 7 столбцы
+            canvas.fillRect(x - 1, y - 4, 1, 1);
+            canvas.fillRect(x + 1, y - 4, 1, 1);
+
+            canvas.fillRect(x - 1, y + 4, 1, 1);
+            canvas.fillRect(x + 1, y + 4, 1, 1);
+
+            // 1-я и 11-я строки, 6-й столбец
+            canvas.fillRect(x, y - 5, 1, 1);
+            canvas.fillRect(x, y + 5, 1, 1);
+
+            // 3-я и 11-я строки, 5 и 7 столбцы
+            canvas.fillRect(x - 1, y - 3, 1, 1);
+            canvas.fillRect(x + 1, y - 3, 1, 1);
+
+            canvas.fillRect(x - 1, y + 3, 1, 1);
+            canvas.fillRect(x + 1, y + 3, 1, 1);
         }
     }
 
+    // Метод для вычисления суммы цифр целой части числа
+    private int sumOfDigits(int number) {
+        number = Math.abs(number);
+        int sum = 0;
+        while (number > 0) {
+            sum += number % 10;
+            number /= 10;
+        }
+        return sum;
+    }
+    protected void paintIntegerPartGraphics(Graphics2D canvas) {
+        canvas.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+        float[] integerDashPattern = {10, 5, 5, 5, 10, 5, 10};
+        BasicStroke integerPartStroke = new BasicStroke(5.5f, BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_ROUND, 10.0f, integerDashPattern, 0.0f);
+        canvas.setStroke(integerPartStroke);
+        canvas.setColor(Color.ORANGE); // Цвет графика "целая часть"
+
+        // Построение графика
+        GeneralPath integerPartPath = new GeneralPath();
+        for (int i = 0; i < graphicsData.length; i++) {
+            Point2D.Double point = xyToPoint(graphicsData[i][0], Math.floor(graphicsData[i][1]));
+            if (i > 0) {
+                integerPartPath.lineTo(point.getX(), point.getY());
+            } else {
+                integerPartPath.moveTo(point.getX(), point.getY());
+            }
+        }
+
+        canvas.draw(integerPartPath);
+    }
+    private boolean showIntegerPart = false; // Флаг отображения графика "целая часть"
+
+    public void setShowIntegerPart(boolean showIntegerPart) {
+        this.showIntegerPart = showIntegerPart;
+        repaint();
+    }
     // Метод, обеспечивающий отображение осей координат
     protected void paintAxis(Graphics2D canvas) {
 // Установить особое начертание для осей
@@ -279,6 +357,19 @@ minY
             canvas.drawString("x", (float) (labelPos.getX() -
                     bounds.getWidth() - 10), (float) (labelPos.getY() + bounds.getY()));
         }
+        // Штрих на координате (0; 1)
+        if (minX <= 0.0 && maxX >= 0.0 && minY <= 1.0 && maxY >= 1.0) {
+            Point2D.Double line = xyToPoint(0, 1);
+            canvas.draw(new Line2D.Double(line.getX() - 10, line.getY(),
+                    line.getX() + 10, line.getY()));
+        }
+
+        // Штрих на координате (1; 0)
+        if (minX <= 1.0 && maxX >= 1.0 && minY <= 0.0 && maxY >= 0.0) {
+            Point2D.Double line = xyToPoint(1, 0);
+            canvas.draw(new Line2D.Double(line.getX(), line.getY() - 10,
+                    line.getX(), line.getY() + 10));
+        }
     }
 
     /* Метод-помощник, осуществляющий преобразование координат.
@@ -300,6 +391,7 @@ minY
      * смещѐнный по отношению к исходному на deltaX, deltaY
      * К сожалению, стандартного метода, выполняющего такую задачу, нет.
      */
+
     protected Point2D.Double shiftPoint(Point2D.Double src, double deltaX,
                                         double deltaY) {
 // Инициализировать новый экземпляр точки
